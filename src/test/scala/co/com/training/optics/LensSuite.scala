@@ -9,6 +9,7 @@ import scala.concurrent.Future
 
 class LensSuite extends FunSuite {
 
+  case class Person(name: String, age: Int, address: Address)
   case class Address(streetNumber: Int, streetName: String)
 
   test("Lens can focus in a specific field of a case class and set/get it") {
@@ -49,18 +50,6 @@ class LensSuite extends FunSuite {
     assert(strNumberLense.modifyF(n => neighbors(n))(address2) == List(Address(streetNumber = 1, streetName = "Dabeiba")))
   }
 
-  test("Lens modifyF - can modify the context of the Product depending the Functor passed (Future case)") {
-
-    def updateNumber(n: Int): Future[Int] = Future.successful(n + 1)
-
-    val strNumberLense: Lens[Address, Int] = GenLens[Address](_.streetNumber)
-
-    val address = Address(5, "La Ceiba")
-
-    val listAddress = strNumberLense.modifyF(updateNumber)(address)
-
-  }
-
   test("Lens can modify a nested attribute inside a case class in a simply way") {
     def updateLeftInStockWithoutLens(user: User) = {
       user.copy(
@@ -86,8 +75,28 @@ class LensSuite extends FunSuite {
     assert(updateLeftInStockWithoutLens(user) == updateLeftInStockWithLens(user))
   }
 
-  test("Lens can modify a tuple attribute") {
-    val user = ("santiago", 2)
+  test("Lens modify nested case class") {
 
+    val addressLens = GenLens[Person](_.address)
+    val streetNumberLens = GenLens[Address](_.streetNumber)
+
+    val address = Address(5, "La Ceiba")
+    val john = Person("John", 20, address)
+
+    val johnSix = (addressLens composeLens streetNumberLens).set(6)(john)
+
+    assert((addressLens composeLens streetNumberLens).get(john) == 5)
+    assert(johnSix.address.streetNumber == 6)
+    assert((addressLens composeLens streetNumberLens).modify(_ + 2)(john) ==
+      Person(address = Address(7, "La Ceiba"), name = "John", age = 20))
+  }
+
+  test("Lens can allows us to compose few lenses at the same time to modify different attributes") {
+    val compose = GenLens[Person](_.name).set("Mike") compose GenLens[Person](_.age).modify(_ + 1)
+
+    val address = Address(5, "La Ceiba")
+    val john = Person("John", 20, address)
+
+    assert(compose(john) == Person("Mike", 21, Address(5, "La Ceiba")))
   }
 }
