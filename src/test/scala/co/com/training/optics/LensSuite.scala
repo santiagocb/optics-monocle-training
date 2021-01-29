@@ -5,8 +5,6 @@ import monocle.Lens
 import monocle.macros.GenLens
 import org.scalatest.FunSuite
 
-import scala.concurrent.Future
-
 class LensSuite extends FunSuite {
 
   case class Person(name: String, age: Int, address: Address)
@@ -98,5 +96,25 @@ class LensSuite extends FunSuite {
     val john = Person("John", 20, address)
 
     assert(compose(john) == Person("Mike", 21, Address(5, "La Ceiba")))
+  }
+
+  test("Lens annotation for creating lenses to all the attributes of a case class") {
+
+    import monocle.macros.Lenses
+
+    @Lenses case class Point(x: Int, y: Int)
+    val p = Point(5, 3)
+
+    assert(Point.x.modify(_ + 10)(p) == Point(15, 3))
+  }
+
+  test("Lens annotation can be specified through an specific prefix") {
+
+    import monocle.macros.Lenses
+
+    @Lenses("_") case class OtherPoint(x: Int, y: Int)
+    val op = OtherPoint(5, 3)
+
+    assert(OtherPoint._y.modify(_ + 20)(op) == OtherPoint(5, 23))
   }
 }
