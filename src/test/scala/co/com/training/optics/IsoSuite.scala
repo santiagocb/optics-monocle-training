@@ -36,11 +36,11 @@ class IsoSuite extends FunSuite {
       Centimeter(m.whole * 100 + m.fraction)
     }
 
-    val modifiedLense = centimeterToMeterIso.modify(m => m.copy(m.whole + 3))
+    val modifiedIso = centimeterToMeterIso.modify(m => m.copy(m.whole + 3))
 
     assert(centimeterToMeterIso.apply(Meter(1, 0)) == Centimeter(100))
     assert(centimeterToMeterIso.get(Centimeter(120)) == Meter(1, 20))
-    assert(modifiedLense(Centimeter(155)) == Centimeter(455))
+    assert(modifiedIso(Centimeter(155)) == Centimeter(455))
   }
 
   test("Iso other example with string and char") {
